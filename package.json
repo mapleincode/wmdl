@@ -1,0 +1,15 @@
+{
+  "name": "wmdl",
+  "version": "1.0.0",
+  "description": "download & save",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^1.5.2",
+    "request": "^2.67.0"
+  }
+}
