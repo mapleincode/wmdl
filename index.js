@@ -31,7 +31,7 @@ var wmdl = function(/*uri, path, params, callback*/) {
     }
 
     if (!fileName) {
-        fileName = (uri + '').match(/\w+.\w+$/);
+        fileName = (uri + '').match(/\[w\_\-\&]+.\w+$/);
         if(!fileName) {
             return callback(new Error('链接名不带 fileName'));
         } 
