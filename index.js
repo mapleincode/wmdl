@@ -15,7 +15,8 @@ var wmdl = function(/*uri, path, params, callback*/) {
     var tmp = Array.prototype.shift.call(arguments);
     var fileName;
     var defaultLocation;
-    var timeout;
+    var timeout = 5000;
+    var retry = 0;
 
     if (!uri || typeof uri !== 'string') {
         return callback(new Error('uri不存在'));
@@ -27,7 +28,8 @@ var wmdl = function(/*uri, path, params, callback*/) {
     else if (tmp) {
         fileName = tmp.fileName;
         defaultLocation = tmp.defaultLocation;
-        timeout = tmp.timeout;
+        timeout = tmp.timeout? tmp.timeout: timeout;
+        retry = tmp.retryTime;
     }
 
     if (!fileName) {
@@ -39,9 +41,6 @@ var wmdl = function(/*uri, path, params, callback*/) {
             fileName = fileName[0];
         }
     }
-    if (!timeout) {
-        timeout = 5000;
-    }
 
     var path = getPath.get(fileName, defaultLocation);
 
@@ -52,13 +51,14 @@ var wmdl = function(/*uri, path, params, callback*/) {
             checkPath.checkPath(path, cb);
         },
         function(cb) {
-            downLoad.down(uri, {timeout: timeout}, cb);
+            downLoad.down(uri, {timeout: timeout, retry: retry}, cb);
         },
         function(file, cb) {
             save.saveFile(file, path, cb);
         }
-    ], function(err) {
-        return callback(err, path);
+    ], function(err, result) {
+        // console.log(err, result);
+        return callback(err, result);
     });
 
 };
