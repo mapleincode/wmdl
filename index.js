@@ -39,6 +39,9 @@ var wmdl = function(/*uri, path, params, callback*/) {
             fileName = fileName[0];
         }
     }
+    if (!timeout) {
+        timeout = 5000;
+    }
 
     var path = getPath.get(fileName, defaultLocation);
 
