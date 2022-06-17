@@ -2,7 +2,7 @@
  * @Author: maple
  * @Date: 2022-06-17 11:39:08
  * @LastEditors: maple
- * @LastEditTime: 2022-06-17 13:38:41
+ * @LastEditTime: 2022-06-17 13:49:36
  */
 const path = require('path');
 const util = require('util');
@@ -31,6 +31,8 @@ const wmdl = async function (uri, downloadPath, options = {}) {
   const renameSameFile = typeof options.renameSameFile === 'boolean' ? options.renameSameFile : true;
   if (!downloadPath) {
     downloadPath = process.cwd();
+  } else {
+    downloadPath = path.resolve(process.cwd(), downloadPath);
   }
 
   const dlPath = path.parse(downloadPath);
