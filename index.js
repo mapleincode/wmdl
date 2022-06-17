@@ -1,66 +1,62 @@
-var async = require('async');
+/**
+ * @Author: maple
+ * @Date: 2022-06-17 11:39:08
+ * @LastEditors: maple
+ * @LastEditTime: 2022-06-17 13:38:41
+ */
+const path = require('path');
+const util = require('util');
 
-var checkPath   = require('./lib/checkPath');
-var config      = require('./config');
-var downLoad    = require('./lib/downLoad');
-var getPath     = require('./lib/getPath');
-var save        = require('./lib/save');
+const checkPath = require('./lib/check_path');
+const downLoad = require('./lib/download');
+const saveFile = require('./lib/save_file');
 
+const check = util.promisify(checkPath.checkPath);
+const down = util.promisify(downLoad.down);
+const save = util.promisify(saveFile.saveFile);
 
+const wmdl = async function (uri, downloadPath, options = {}) {
+  if (!uri || typeof uri !== 'string') {
+    throw new Error('uri不存在');
+  }
 
+  if (typeof downloadPath === 'object') {
+    options = downloadPath;
+    downloadPath = options.downloadPath;
+  }
 
-var wmdl = function(/*uri, path, params, callback*/) {
-    var callback = Array.prototype.pop.call(arguments);
-    var uri = Array.prototype.shift.call(arguments);
-    var tmp = Array.prototype.shift.call(arguments);
-    var fileName;
-    var defaultLocation;
-    var timeout = 5000;
-    var retry = 0;
+  let filename = options.filename;
+  const timeout = options.timeout || 5000;
+  const retry = options.retry || 0;
+  const renameSameFile = typeof options.renameSameFile === 'boolean' ? options.renameSameFile : true;
+  if (!downloadPath) {
+    downloadPath = process.cwd();
+  }
 
-    if (!uri || typeof uri !== 'string') {
-        return callback(new Error('uri不存在'));
+  const dlPath = path.parse(downloadPath);
+
+  if (!filename && dlPath.ext) {
+    filename = `${dlPath.name}${dlPath.ext}`;
+    downloadPath = dlPath.dir;
+  } else if (!filename) {
+    const filenameMatchs = (uri + '').match(/[\w_\-&=]+.\w+$/);
+    if (!filenameMatchs) {
+      throw new Error('missing filename');
+    } else {
+      filename = filenameMatchs[0];
     }
+  }
 
-    if (typeof tmp === 'string') {
-        fileName = tmp;
-    }
-    else if (tmp) {
-        fileName = tmp.fileName;
-        defaultLocation = tmp.defaultLocation;
-        timeout = tmp.timeout? tmp.timeout: timeout;
-        retry = tmp.retryTime;
-    }
+  await check(downloadPath);
 
-    if (!fileName) {
-        fileName = (uri + '').match(/[\w\_\-\&\=]+.\w+$/);
-        if(!fileName) {
-            return callback(new Error('链接名不带 fileName'));
-        } 
-        else {
-            fileName = fileName[0];
-        }
-    }
+  const hasSameFile = await saveFile.hasSameFile(path.join(downloadPath, filename));
+  if (hasSameFile) {
+    throw new Error('same file has been downloaded.');
+  }
 
-    var path = getPath.get(fileName, defaultLocation);
+  const file = await down(uri, { timeout, retry });
 
-
-
-    async.waterfall([
-        function(cb) {
-            checkPath.checkPath(path, cb);
-        },
-        function(cb) {
-            downLoad.down(uri, {timeout: timeout, retry: retry}, cb);
-        },
-        function(file, cb) {
-            save.saveFile(file, path, cb);
-        }
-    ], function(err, result) {
-        // console.log(err, result);
-        return callback(err, result);
-    });
-
+  await save(file, filename, downloadPath, { renameSameFile });
 };
 
 exports.wmdl = wmdl;
